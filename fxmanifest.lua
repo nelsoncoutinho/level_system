@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Nelson Coutinho'
 description 'Basic Level System'
-version '1.0.0'
+version '1.0.2'
 
 client_scripts {
     'client/*.lua'

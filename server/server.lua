@@ -1,9 +1,6 @@
 local ESX = exports["es_extended"]:getSharedObject()
 local players = {}
 
--- Adicione esta linha no início do arquivo para importar ox_lib
-local lib = exports['ox_lib']
-
 local function loadPlayerData(identifier)
     local result = MySQL.Sync.fetchAll("SELECT level, respect FROM player_levels WHERE identifier = @identifier", {
         ['@identifier'] = identifier
@@ -56,6 +53,20 @@ local function giveReward(xPlayer, level)
         end
     end
 end
+
+local function sendNotification(playerId, message, type)
+    if Config.NotificationType == 'ox' then
+        TriggerClientEvent('ox_lib:notify', playerId, {
+            description = message,
+            type = type
+        })
+    elseif Config.NotificationType == 'okokNotify' then
+        TriggerClientEvent('okokNotify:Alert', playerId, "Sistema de Níveis", message, 5000, type)
+    else
+        TriggerClientEvent('esx:showNotification', playerId, message)
+    end
+end
+
 CreateThread(function()
     while true do
         Wait(Config.RespectGainInterval)
@@ -76,6 +87,7 @@ CreateThread(function()
                     TriggerClientEvent('respectLevel:levelUp', xPlayer.source, data.level)
                     giveReward(xPlayer, data.level)
                     
+                    SendDiscordWebhook(_L('discord_level_up'):format(xPlayer.getName(), data.level))
                 end
             end
             
@@ -85,12 +97,10 @@ CreateThread(function()
                 if xPlayer then
                     TriggerClientEvent('respectLevel:syncData', xPlayer.source, data.level, data.respect)
                     if data.respect > oldRespect then
-                        -- Alteração aqui também
-                        TriggerClientEvent('ox_lib:notify', xPlayer.source, {
-                            title = _L('respect_gained'),
-                            description = _L('respect_gained'),
-                            type = 'info'
-                        })
+                        -- Alteração aqui: Usar a nova função sendNotification
+                        sendNotification(xPlayer.source, _L('respect_gained'), 'info')
+                        
+                        SendDiscordWebhook(_L('discord_respect_gained'):format(xPlayer.getName(), data.respect))
                     end
                 end
             end
@@ -118,8 +128,8 @@ local function checkForUpdates()
 	end, "GET", "", {["Content-Type"] = "application/json"})
 end
 
--- Check for updates when the resource starts
+
 Citizen.CreateThread(function()
-	Citizen.Wait(5000) -- Wait 5 seconds to ensure everything is loaded
+	Citizen.Wait(5000)
 	checkForUpdates()
 end)
