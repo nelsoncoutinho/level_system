@@ -26,7 +26,7 @@ local function ensurePlayerData(identifier)
     if not players[identifier] then
         local level, respect = loadPlayerData(identifier)
         if not level then
-            level = 1
+            level = 0
             respect = 0
             savePlayerData(identifier, level, respect)
         end
@@ -75,12 +75,7 @@ CreateThread(function()
                 if xPlayer then
                     TriggerClientEvent('respectLevel:levelUp', xPlayer.source, data.level)
                     giveReward(xPlayer, data.level)
-                    -- Alteração aqui: use TriggerClientEvent para chamar a notificação no lado do cliente
-                    TriggerClientEvent('ox_lib:notify', xPlayer.source, {
-                        title = _L('level_up'),
-                        description = _L('reached_level', {level = data.level}),
-                        type = 'success'
-                    })
+                    
                 end
             end
             
